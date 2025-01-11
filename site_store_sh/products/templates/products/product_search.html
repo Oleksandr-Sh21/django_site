@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container ct my-5">
+    <h1 class="mb-4">Результати пошуку</h1>
+    {% if query %}
+        <p class="text-muted ms-4">Ви шукали: <strong>{{ query }}</strong></p>
+    {% endif %}
+    <div class="row">
+        <!-- Фільтри: Сортування та Категорії -->
+        <div class="col-12 col-md-2 mb-4">
+            <div class="border rounded p-3 shadow-sm bg-light">
+                <!-- Сортування -->
+                <h5 class="fw-semibold mb-3">Сортування</h5>
+                <form method="get" action="{% url 'product_search' %}">
+                    <input type="hidden" name="q" value="{{ request.GET.q }}">
+                    <input type="hidden" name="category" value="{{ request.GET.category }}">
+                    <select name="filter" class="form-select mb-3">
+                        <option value="">Сортувати за...</option>
+                        <option value="price" {% if request.GET.filter == 'price' %}selected{% endif %}>Ціна за зростанням</option>
+                        <option value="price_desc" {% if request.GET.filter == 'price_desc' %}selected{% endif %}>Ціна за спаданням</option>
+                        <option value="new" {% if request.GET.filter == 'new' %}selected{% endif %}>Новинки</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary w-100">Застосувати</button>
+                </form>
+
+                <!-- Категорії -->
+                <hr class="my-4">
+                <h5 class="fw-semibold mb-3">Категорії</h5>
+                <ul class="list-group">
+                    {% for category in categories %}
+                        <h6 class="cus-list-group-item border-0 ps-2">
+                            <a href="{% url 'categories:product_by_category' category.slug %}"
+                               class="text-decoration-none text-dark">{{ category.name }}</a>
+                            <hr>
+                        </h6>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Результати пошуку -->
+        <div class="col-12 col-md-9">
+            {% if products %}
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+                    {% for product in products %}
+                        <!-- Карточка товару -->
+                        <div class="col">
+                            <div class="product-item d-flex flex-column h-100 border rounded p-3 shadow-sm">
+                                <a href="{% url 'detail' product.slug %}"
+                                   class="text-decoration-none text-dark d-flex flex-column flex-grow-1">
+                                    <!-- Обмеження висоти зображення -->
+                                    <img src="{{ product.images.all.0.image.url }}" alt="{{ product.name }}"
+                                         class="img-fluid rounded mb-2" style="height: 200px; object-fit: cover;">
+                                    <h3 class="product-title fs-6 mb-2 text-center">{{ product.name }}</h3>
+                                    <p class="product-description flex-grow-1 mb-3 text-muted text-center"
+                                       style="font-size: 0.9rem;">{{ product.description }}</p>
+                                </a>
+                                <div class="d-flex justify-content-between align-items-center mt-auto">
+                                    <p class="fw-bold mb-0">{{ product.price }} грн</p>
+                                    <div class="btn-group">
+                                        <form action="{% url 'users:add_favorite' product_id=product.id %}" method="post">
+                                            {% csrf_token %}
+                                            <button class="btn text-danger btn btm_shop_heart">
+                                                <i class="fa-regular fa-heart"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{% url 'cart:add_to_cart' product_id=product.id %}" method="post">
+                                            {% csrf_token %}
+                                            <button class="btn text-success btn btm_shop_heart">
+                                                <i class="fa-solid fa-cart-shopping"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Нічого не знайдено за вашим запитом.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

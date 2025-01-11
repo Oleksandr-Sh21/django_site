@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div id="carouselExampleIndicators" class="carousel slide">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"
+                aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"
+                aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2"
+                aria-label="Slide 3"></button>
+    </div>
+    <div class="carousel-inner">
+        <div class="carousel-item active">
+            <img src="{{ '/media/photos/index-baner.jpg' }}" class="d-block w-100 img" alt="...">
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators"
+            data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators"
+            data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
+<div class="custom-bg-card-container rounded-4 mx-2">
+    <div class="container d-flex justify-content-between py-2 my-2">
+        {% for category in categories %}
+        <div class="card rounded-4 custom-bg-card" style="width: 14rem; height: 18rem; overflow: hidden;">
+            <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}">
+            <div class="card-body">
+                <div class="card-body text-center">
+                    <h4><a href="{% url 'categories:product_by_category' category.slug %}" class="card-link link">{{ category.name }}</a></h4>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="container">
+    <div class="product-container">
+        {% for product in products %}
+        <div class="product-item d-flex flex-column h-100 border rounded p-3">
+            <a href="{% url 'detail' product.slug %}"
+               class="text-decoration-none text-dark d-flex flex-column flex-grow-1">
+                <img src="{{ product.images.all.0.image.url }}" alt="{{ product.name }}" class="img-fluid rounded mb-2">
+                <h3 class="product-title fs-5 mb-2">{{ product.name }}</h3>
+                <p class="product-description flex-grow-1 mb-3 text-muted">{{ product.description }}</p>
+            </a>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+                <p class="fw-bold mb-0">{{ product.price }} грн</p>
+                <div class="btn-group">
+                    <form action="{% url 'users:add_favorite' product_id=product.id %}" method="post">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-danger btn-sm">
+                            <i class="fa-regular fa-heart"></i>
+                        </button>
+                    </form>
+                    <form action="{% url 'cart:add_to_cart' product_id=product.id %}" method="post">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-success btn-sm">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

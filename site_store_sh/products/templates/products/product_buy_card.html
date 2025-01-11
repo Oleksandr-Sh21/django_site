@@ -1,0 +1,29 @@
+<div class="col-md-5 col-12">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body text-center">
+            <div class="d-flex mb-3">
+                <img src="{{ product.images.all.0.image.url }}" alt="Товар"
+                     class="img-fluid img-thumbnail me-3"
+                     style="width: 80px; height: 80px; object-fit: cover;">
+                <p>{{ product.name }}</p>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <div class="d-flex flex-column align-items-center">
+                    {% if product.discount_price %}
+                    <span class="ms-4 old-price">{{ product.price }} ₴</span>
+                    {% endif %}
+                    <span class="ms-2 text-danger fw-bold">{{ product.discount_price|default:product.price }} ₴</span>
+                </div>
+                <form action="{% url 'users:add_favorite' product_id=product.id %}" method="post">
+                    {% csrf_token %}
+                    <button class="btn text-danger me-2">
+                        <i class="fa-regular fa-heart fs-4"></i>
+                    </button>
+                </form>
+            </div>
+            <form action="{% url 'cart:add_to_cart' product_id=product.id %}" method="post">
+                <button class="btn btn-secondary w-100 mb-2">Добавити в кошик</button>
+            </form>
+        </div>
+    </div>
+</div>

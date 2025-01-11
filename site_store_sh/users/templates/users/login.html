@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-login-box">
+        <h1 class="auth-login-title">Авторизація</h1>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}"/>
+            <div class="form-error">{{ form.non_field_errors }}</div>
+            <div class="auth-form-group">
+                <i class="fas fa-user auth-icon"></i>
+                {{ form.username }}
+            </div>
+            <div class="auth-form-group">
+                <i class="fas fa-lock auth-icon"></i>
+                {{ form.password }}
+            </div>
+            <button type="submit" class="auth-btn-primary w-100">Увійти</button>
+        </form>
+        <div class="auth-forgot-password">
+            <a href="{% url 'users:register' %}" class='pe-2'>Реєстрація</a>
+            <a href="{% url 'users:password_reset' %}">Забули пароль?</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

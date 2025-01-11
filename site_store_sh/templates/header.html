@@ -1,0 +1,54 @@
+<nav class="custom-navbar bg-body-tertiary position-relative custom-bg navbar navbar-expand-lg">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <!-- Shop та Каталог зліва -->
+        <a class="navbar-brand" href="{% url 'home' %}">Shop</a>
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+                <div class="dropdown">
+                    <button class="btn text-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        Каталог
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for category in categories %}
+                        <li><a class="dropdown-item" href="{% url 'categories:product_by_category' category.slug %}">
+                            {{ category.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </li>
+        </ul>
+
+        <!-- Пошук по центру з абсолютним позиціонуванням -->
+        <form class="d-flex position-relative w-50" method="get" action="{% url 'product_search' %}">
+            <div class="input-group position-relative w-100">
+                <input
+                        id="search-input"
+                        class="form-control rounded-start"
+                        type="search"
+                        placeholder="Я шукаю..."
+                        value="{{ request.GET.q }}"
+                        name="q"
+                        autocomplete="off"
+                >
+                <button class="btn btn-secondary rounded-end" type="submit">Пошук</button>
+            </div>
+            <ul id="search-results" class="list-group bg-light">
+                <!-- Динамічні результати будуть додані тут через JS -->
+            </ul>
+        </form>
+
+        <!-- Профіль праворуч -->
+        <ul class="navbar-nav ms-auto align-items-center">
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center" href="{% url 'users:profile' %}"><i
+                        class="fa-regular fa-user profile-ico"></i></a>
+            </li>
+            <li class="nav-item ms-1">
+                <button type="button" class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#cartModal">
+                    <i class="fa-solid fa-cart-shopping custom-sh-ct"></i>
+                </button>
+            </li>
+        </ul>
+    </div>
+</nav>

@@ -1,0 +1,538 @@
+{% extends 'base.html' %}
+
+{% load custom_tags %}
+
+{% block content %}
+
+<div>
+    <ul class="nav border-bottom border-black custom-border">
+        <li class="custom-nav-item border-end border-black custom-border">
+            <a class="custom-nav-link {% if request.GET.tab == 'description' or not request.GET.tab %}active{% endif %}"
+               href="?tab=description" id="description-tab" aria-controls="description" role="tab">Усе про товар</a>
+        </li>
+        <li class="custom-nav-item border-end border-black custom-border">
+            <a class="custom-nav-link {% if request.GET.tab == 'character' %}active{% endif %}"
+               href="?tab=character" id="character-tab" aria-controls="character" role="tab">Характеристики</a>
+        </li>
+        <li class="custom-nav-item border-end border-black custom-border">
+            <a class="custom-nav-link {% if request.GET.tab == 'reviews' %}active{% endif %}"
+               href="?tab=reviews&page={{ page_obj.number|default:1 }}" id="reviews-tab" aria-controls="reviews"
+               role="tab">Відгуки <sup>({{ quality }})</sup></a>
+        </li>
+    </ul>
+
+</div>
+
+<div class="container mt-4">
+    <div class="tab-content rounded p-4 mt-3 border_tab" id="productTabContent">
+        <!-- Tab: Опис -->
+        <div class="tab-pane fade {% if request.GET.tab == 'description' or not request.GET.tab %}show active{% endif %}"
+             id="description" role="tabpanel" aria-labelledby="description-tab">
+            <div class="d-flex justify-content-around mt-3">
+                <div class="col-md-6">
+                    <!-- Карта з зображенням -->
+                    <div class="card">
+                        <div id="carouselSmProduct" class="carousel slide carousel-fade">
+                            <div class="carousel-inner">
+                                {% for image in product.images.all %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                    <!-- Add data-bs-toggle and data-bs-target here -->
+                                    <img src="{{ image.image.url }}" class="d-block w-100 rounded"
+                                         alt="{{ product.name }}" data-bs-toggle="modal" data-bs-target="#ProductModal">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselSmProduct"
+                                    data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselSmProduct"
+                                    data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <!-- Контент картки -->
+                    <div class="card p-3">
+                        <p class="card-title">{{ product.name }}</p>
+                        {% if avg_rating %}
+                        <div class="star-rating mb-3 me-3">
+                            {% with rating=avg_rating|floatformat:0 %}
+                            {% for i in "12345"|make_list %}
+                            {% if i <= rating %}
+                            <span class="text-warning">&#9733;</span>
+                            {% else %}
+                            <span class="text-secondary">&#9734;</span>
+                            {% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                        </div>
+                        {% else %}
+                        <div class="star-rating mb-3 me-3">
+                            <span>Немає оцінок</span>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="d-flex flex-column align-items-center">
+                                {% if product.discount_price %}
+                                <span class="ms-4 old-price">{{ product.price }} ₴</span>
+                                {% endif %}
+                                <span class="ms-2 text-danger fw-bold">{{ product.discount_price|default:product.price }} ₴</span>
+                            </div>
+                            <form action="{% url 'users:add_favorite' product_id=product.id %}" method="post">
+                                {% csrf_token %}
+                                <button class="btn text-danger me-2">
+                                    <i class="fa-regular fa-heart fs-4"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="d-flex">
+                            <form action="{% url 'cart:add_to_cart' product_id=product.id %}" method="post">
+                                <button class="btn btn-success me-2">Купити</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-body mt-4">
+                <p>{{ product.description }}</p>
+            </div>
+        </div>
+
+        <!-- Tab: Характеристики -->
+        <div class="tab-pane fade {% if request.GET.tab == 'character' %}show active{% endif %}"
+             id="character" role="tabpanel" aria-labelledby="character-tab">
+            <div class="container mt-4">
+                <div class="row">
+                    <!-- Ліва частина: Опис та характеристики -->
+                    <div class="col-md-7 col-12">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <h3 class="my-2">Характеристики {{ product.name }}</h3>
+                                <div class="char-list">
+                                    {% for char in product.attributes.all %}
+                                    <div class="d-flex justify-content-between char-item">
+                                        <div class="char-name">{{ char.attribute_value.attribute.name }}</div>
+                                        <div class="char-value">{{ char.attribute_value.value }}</div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Права частина: Блок покупки -->
+                    {% include 'products/product_buy_card.html' %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Відгуки -->
+        <div class="tab-pane fade {% if request.GET.tab == 'reviews' %}show active{% endif %}"
+             id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+            <div class="container mt-4">
+                <div class="row">
+                    <!-- Ліва частина: Опис та характеристики -->
+
+                    <div class="col-md-7 col-12">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                                <h5 class="mb-0">Залиште свій відгук</h5>
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal"
+                                        data-bs-target="#reviewModal">
+                                    Написати відгук
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <h2 class="h4 mb-4">Відгуки про продукт</h2>
+                                {% if product.reviews.exists %}
+                                {% for review in object_list %}
+                                <ul class="list-group mb-4">
+                                    <li class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                <span id="review-name" class="text-muted">
+                    <b style="color: black;">Ім'я:</b> {{ review.user.username }}
+                </span>
+                                            <div class="star-rating">
+                                                {% for _ in review.rating|subtract %}
+                                                <span class="text-secondary">&#9734;</span>
+                                                {% endfor %}
+                                                {% for _ in review.rating|range_filter %}
+                                                <span class="text-warning">&#9733;</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <b>Коментар:</b>
+                                        <span id="review-comment" class="text-muted">{{ review.content }}</span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <b>Переваги:</b>
+                                        <span id="review-advantages" class="text-success">{{ review.advantages }}</span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <b>Недоліки:</b>
+                                        <span id="review-disadvantages"
+                                              class="text-danger">{{ review.disadvantages }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-end align-items-center">
+                                        <button class="btn btn-outline-success btn-sm react-button"
+                                                data-url="{% url 'reviews:react' %}"
+                                                data-content-type="review"
+                                                data-object-id="{{ review.id }}"
+                                                data-reaction="1">
+                                            <i class="fa-regular fa-thumbs-up"></i>
+                                            <span class="likes-count">{{ review.like_count }}</span>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm react-button ms-2"
+                                                data-url="{% url 'reviews:react' %}"
+                                                data-content-type="review"
+                                                data-object-id="{{ review.id }}"
+                                                data-reaction="-1">
+                                            <i class="fa-regular fa-thumbs-down"></i>
+                                            <span class="dislikes-count">{{ review.dislike_count }}</span>
+                                        </button>
+
+                                        <button class="btn" data-bs-toggle="modal"
+                                                data-bs-target="#replyModal-{{ review.id }}">
+                                            <i class="fa-solid fa-reply"></i>
+                                        </button>
+                                    </li>
+
+                                    {% if review.replies.exists %}
+                                    <li class="reply-review border-start mt-3 ms-3">
+                                        <div class="comments" id="comments-{{ review.id }}">
+                                            <h6 class="fw-bold mb-3">Коментарі:</h6>
+                                            {% for reply in review.replies.all|slice:":3" %}
+                                            <div class="card mb-2">
+                                                <div class="card-body p-2">
+                                                    <p class="mb-1">
+                                                        <span class="fw-bold">{{ reply.user.username }}</span>: {{ reply.content }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% if review.replies.count > 3 %}
+                                        <div class="text-end mt-2">
+                                            <button class="btn btn-outline-secondary btn-sm load-more-comments"
+                                                    data-review-id="{{ review.id }}" data-offset="3">
+                                                Показати ще
+                                            </button>
+                                        </div>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                                {% endfor %}
+                                {% else %}
+                                <p>Немає відгуків</p>
+                                {% endif %}
+                            </div>
+
+                            <nav aria-label="pagination">
+                                {% if is_paginated %}
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                           href="?tab=reviews&page={{ page_obj.previous_page_number }}"
+                                           aria-label="Попередня">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+
+                                    {% for num in paginator.page_range %}
+                                    {% if num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    {% if page_obj.number == num %}
+                                    <li class="page-item active" aria-current="page">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?tab=reviews&page={{ num }}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                    {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?tab=reviews&page={{ page_obj.next_page_number }}"
+                                           aria-label="Наступна">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                                {% endif %}
+                            </nav>
+                        </div>
+                    </div>
+                    {% include 'products/product_buy_card.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="ProductModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- Add 'modal-lg' to make it larger -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Product Image</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="ProductLgModal" class="carousel slide carousel-fade">
+                    <div class="carousel-inner">
+                        {% for image in product.images.all %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <!-- Add data-bs-toggle and data-bs-target here -->
+                            <img src="{{ image.image.url }}" class="d-block w-100 rounded" alt="{{ product.name }}"
+                                 data-bs-toggle="modal">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#ProductLgModal"
+                            data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#ProductLgModal"
+                            data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">Залишити відгук</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" id="reviewForm" action="{% url 'reviews:review_create' product_id=product.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rating" class="form-label">Оцінка</label>
+                        <select class="form-select" id="rating" name="rating" required>
+                            <option value="5" selected>5 - Відмінно</option>
+                            <option value="4">4 - Добре</option>
+                            <option value="3">3 - Задовільно</option>
+                            <option value="2">2 - Погано</option>
+                            <option value="1">1 - Жахливо</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Ваш відгук</label>
+                        <textarea class="form-control" id="content" name="content" rows="4"
+                                  placeholder="Напишіть ваш відгук" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="advantages" class="form-label">Переваги (необов'язково)</label>
+                        <textarea class="form-control" id="advantages" name="advantages" rows="2"
+                                  placeholder="Перелічіть переваги продукту"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="disadvantages" class="form-label">Недоліки (необов'язково)</label>
+                        <textarea class="form-control" id="disadvantages" name="disadvantages" rows="2"
+                                  placeholder="Перелічіть недоліки продукту"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Надіслати</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для кожного відгуку -->
+{% for review in product.reviews.all %}
+<!-- Модальне вікно для кожного відгуку -->
+<div class="modal fade" id="replyModal-{{ review.id }}" tabindex="-1" aria-labelledby="replyModalLabel-{{ review.id }}"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="replyModalLabel-{{ review.id }}">Додати коментар</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'reviews:reply_create' review_id=review.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="content-{{ review.id }}" class="form-label">Ваш коментар</label>
+                        <textarea class="form-control" id="content-{{ review.id }}" name="content" rows="4"
+                                  placeholder="Напишіть ваш коментар" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Надіслати</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const reactButtons = document.querySelectorAll('.react-button');
+
+        reactButtons.forEach(button => {
+            button.addEventListener('click', async function () {
+                const url = this.dataset.url;
+                const contentType = this.dataset.contentType;
+                const objectId = this.dataset.objectId;
+                const reactionValue = this.dataset.reaction;
+
+                const formData = new FormData();
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                formData.append('reaction', reactionValue);
+
+                if (contentType === 'review') {
+                    formData.append('review', objectId);
+                } else if (contentType === 'reply') {
+                    formData.append('reply', objectId);
+                }
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        // Оновлюємо кількість лайків і дизлайків
+                        const parentLi = this.closest('li');
+                        const likesCount = parentLi.querySelector('.likes-count');
+                        const dislikesCount = parentLi.querySelector('.dislikes-count');
+
+                        if (likesCount && dislikesCount && data.likes !== undefined && data.dislikes !== undefined) {
+                            likesCount.textContent = data.likes;
+                            dislikesCount.textContent = data.dislikes;
+                        }
+
+                    } else {
+                        console.error('Помилка під час відправки:', await response.text());
+                    }
+                } catch (error) {
+                    console.error('Помилка під час обробки запиту:', error);
+                }
+            });
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const loadMoreButtons = document.querySelectorAll(".load-more-comments");
+
+        if (loadMoreButtons.length === 0) {
+            console.warn("Кнопки 'Показати ще' не знайдено.");
+            return;
+        }
+
+        loadMoreButtons.forEach(button => {
+            button.addEventListener("click", async function () {
+                const reviewId = this.dataset.reviewId;
+                const offset = parseInt(this.dataset.offset, 10);
+
+                console.log(`Завантаження коментарів для reviewId=${reviewId}, offset=${offset}`);
+
+                try {
+                    const response = await fetch(`/review/${reviewId}/comments/load_more/?offset=${offset}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.comments.length > 0) {
+                        const commentsContainer = document.getElementById(`comments-${reviewId}`);
+
+                        data.comments.forEach(comment => {
+                            const commentElement = document.createElement("div");
+                            commentElement.classList.add("card", "mb-2");
+                            commentElement.innerHTML = `
+                                <div class="card-body p-2">
+                                    <p class="mb-1"><span class="fw-bold">${comment.user}</span>: ${comment.content}</p>
+                                </div>`;
+                            commentsContainer.appendChild(commentElement);
+                        });
+
+                        this.dataset.offset = offset + 3;
+
+                        if (!data.has_more) {
+                            this.remove();
+                        }
+                    } else {
+                        console.info("Більше коментарів немає.");
+                        this.remove();
+                    }
+                } catch (error) {
+                    console.error("Помилка при завантаженні коментарів:", error);
+                }
+            });
+        });
+    });
+</script>
+
+
+<script>
+    document.getElementById('reviewForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(err => { throw err; });
+                }
+            })
+            .then(data => {
+                alert(data.message);  // Відгук створено успішно
+                // Закрити модальне вікно або оновити список відгуків
+            })
+            .catch(errors => {
+                console.error('Помилки:', errors.errors);  // Обробка помилок
+                // Відобразити помилки користувачу
+            });
+    });
+</script>
+
+{% endblock %}

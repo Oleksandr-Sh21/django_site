@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ category.name }}
+{% endblock %}
+
+{% block content %}
+<div class="container ct my-4">
+    <h2 class="text-center fw-bold mb-4">{{ category.name }}</h2>
+    <div class="row">
+        <!-- Фільтри -->
+        <div class="col-12 col-md-2 mb-4">
+            <div class="border rounded p-3 shadow-sm bg-light">
+                <h5 class="fw-semibold mb-3">Сортування</h5>
+                <select class="form-select mb-4" id="filter-select" aria-label="Фільтрувати">
+                    <option value="">Обрати...</option>
+                    <option value="price" {% if filter == 'price' %}selected{% endif %}>Ціна (за зростанням)</option>
+                    <option value="price_desc" {% if filter == 'price_desc' %}selected{% endif %}>Ціна (за спаданням)</option>
+                    <option value="new" {% if filter == 'new' %}selected{% endif %}>Новинки</option>
+                </select>
+                <h5 class="fw-semibold mb-3">Фільтри</h5>
+                <form method="get">
+                    {% for attribute in attributes %}
+                    <div class="mb-3">
+                        <h6 class="fw-bold">{{ attribute.name }}</h6>
+                        <div class="d-flex flex-column">
+                            {% for value in attribute.values.all %}
+                            <label class="form-check-label">
+                                <input type="checkbox" name="attributes" value="{{ value.id }}" class="form-check-input me-2"
+                                       {% if value.id|stringformat:"s" in selected_attributes %}checked{% endif %}>
+                                {{ value.value }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100">Застосувати</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Товари -->
+        <div class="col-12 col-md-9">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+                {% for product in products %}
+                <div class="col">
+                    <div class="product-item d-flex flex-column h-100 border rounded p-3 shadow-sm">
+                        <a href="{% url 'detail' product.slug %}" class="text-decoration-none text-dark d-flex flex-column flex-grow-1">
+                            <!-- Правильне обмеження висоти зображення -->
+                            <img src="{{ product.images.all.0.image.url }}" alt="{{ product.name }}" class="img-fluid rounded mb-2" style="height: 200px; object-fit: cover;">
+                            <h3 class="product-title fs-6 mb-2 text-center">{{ product.name }}</h3>
+                            <p class="product-description flex-grow-1 mb-3 text-muted text-center" style="font-size: 0.9rem;">{{ product.description }}</p>
+                        </a>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <p class="fw-bold mb-0">{{ product.price }} грн</p>
+                            <div class="btn-group">
+                                <form action="{% url 'users:add_favorite' product_id=product.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button class="btn text-danger btn btm_shop_heart">
+                                        <i class="fa-regular fa-heart"></i>
+                                    </button>
+                                </form>
+                                <form action="{% url 'cart:add_to_cart' product_id=product.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button class="btn text-success btn btm_shop_heart">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Додаємо обробник для зміни фільтра
+    document.getElementById('filter-select').addEventListener('change', function () {
+        const selectedFilter = this.value;
+        const currentUrl = new URL(window.location.href);
+        if (selectedFilter) {
+            currentUrl.searchParams.set('filter', selectedFilter); // Додаємо параметр
+        } else {
+            currentUrl.searchParams.delete('filter'); // Видаляємо параметр
+        }
+        window.location.href = currentUrl.href; // Перезавантажуємо сторінку
+    });
+</script>
+{% endblock %}

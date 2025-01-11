@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row g-5 justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <h4 class="mb-3 text-center">Реєстрація</h4>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="row g-3">
+                    <!-- Логін -->
+                    <div class="col-12">
+                        <label for="id_username" class="form-label">{{ form.username.label }}</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.username.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Електронна пошта -->
+                    <div class="col-12">
+                        <label for="id_email" class="form-label">{{ form.email.label }}</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.email.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Ім'я -->
+                    <div class="col-6">
+                        <label for="id_first_name" class="form-label">{{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.first_name.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Прізвище -->
+                    <div class="col-6">
+                        <label for="id_last_name" class="form-label">{{ form.last_name.label }}</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.last_name.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Дата народження -->
+                    <div class="col-12">
+                        <label for="id_date_birthday" class="form-label">{{ form.date_birthday.label }}</label>
+                        {{ form.date_birthday }}
+                        {% if form.date_birthday.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.date_birthday.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Номер телефону -->
+                    <div class="col-6">
+                        <label for="id_phone_number" class="form-label">{{ form.phone_number.label }}</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.phone_number.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Пароль -->
+                    <div class="col-12">
+                        <label for="id_password1" class="form-label">{{ form.password1.label }}</label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.password1.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Повторення паролю -->
+                    <div class="col-12">
+                        <label for="id_password2" class="form-label">{{ form.password2.label }}</label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.password2.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <button class="w-100 btn btn-secondary btn-lg" type="submit">Зареєструватися</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

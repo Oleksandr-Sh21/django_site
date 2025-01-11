@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4 profile-page">
+    <div class="profile-sidebar">
+        <ul class="profile-menu">
+            <li class="profile-menu-item active" data-target="#profile-overview">Профіль</li>
+            <li class="profile-menu-item" data-target="#profile-orders">Замовлення</li>
+            <li class="profile-menu-item" data-target="#profile-favorites">Вподобані</li>
+        </ul>
+        <form method="POST" action="{% url 'users:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger w-100 mt-3">Вийти</button>
+        </form>
+    </div>
+
+    <div class="profile-content">
+        <div id="profile-overview" class="profile-tab-content active">
+            <div class="row">
+                <div class="col-md-4 profile-avatar-container">
+                    {% if user.photo %}
+                    <img src="{{ user.photo.url }}" alt="Аватар" class="profile-avatar">
+                    {% else %}
+                    <img src="{{ '/media/photos/users/avatar.png' }}" alt="Аватар" class="profile-avatar">
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <h2>{{ user.first_name }} {{ user.last_name }}</h2>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Телефон:</strong> {{ user.phone_number|default:"Не вказано" }}</p>
+                    <p><strong>Дата народження:</strong> {{ user.date_birthday|date:"d.m.Y"|default:"Не вказано" }}</p>
+                    <a href="{% url 'users:edit_profile' %}" class="btn btn-primary mt-3">Редагувати профіль</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="profile-orders" class="profile-tab-content">
+            <h3>Замовлення</h3>
+            <p>Список замовлень буде тут.</p>
+        </div>
+
+        <div id="profile-favorites" class="profile-tab-content">
+            <h3>Вподобані товари</h3>
+            {% if favorites %}
+            <div class="favorites-list">
+                {% for favorite in favorites %}
+                <div class="product-card custom-product-md-card d-flex flex-column flex-md-row">
+                    <div class="modal_product-image me-3">
+                        <img src="{{ favorite.product.images.all.0.image.url }}" alt="{{ favorite.product.name }}"
+                             class="img-fluid" style="max-width: 150px;">
+                    </div>
+                    <div class="product-details flex-grow-1">
+                        <h5><a href="{% url 'detail' favorite.product.slug %}" class="link">{{ favorite.product.name }}</a></h5>
+                        <div class="d-flex align-items-center justify-content-end mt-3">
+                            <div class="d-flex flex-column align-items-center">
+                                {% if favorite.product.discount_price %}
+                                <span class="ms-4 old-price">{{ favorite.product.price }} ₴</span>
+                                {% endif %}
+                                <span class="ms-2 text-danger fw-bold">{{ favorite.product.discount_price|default:favorite.product.price }} ₴</span>
+                            </div>
+                            <form action="{% url 'users:remove_favorite' product_id=favorite.product.id %}" method="post">
+                                {% csrf_token %}
+                                <button class="btn ms-3" onclick="removeFavorite({{ favorite.product.id }})">
+                                    <i class="fa-solid fa-trash" style="color: #f40b0b;"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>У вас немає вподобаних товарів.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const menuItems = document.querySelectorAll(".profile-menu-item");
+        const tabs = document.querySelectorAll(".profile-tab-content");
+
+        menuItems.forEach((item) => {
+            item.addEventListener("click", (event) => {
+                // Зняти активний клас з усіх пунктів меню
+                menuItems.forEach((menuItem) => menuItem.classList.remove("active"));
+                // Додати активний клас вибраному пункту
+                event.target.classList.add("active");
+
+                // Зняти активний клас з усіх вкладок
+                tabs.forEach((tab) => tab.classList.remove("active"));
+                // Показати вибрану вкладку
+                const targetTab = document.querySelector(event.target.dataset.target);
+                targetTab.classList.add("active");
+            });
+        });
+    });
+</script>
+
+{% endblock %}

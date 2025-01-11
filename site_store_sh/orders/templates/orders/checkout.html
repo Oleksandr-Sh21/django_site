@@ -1,0 +1,462 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container my-5">
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Customer Information -->
+            <div class="col-lg-8">
+                <!-- Особиста інформація -->
+                <div class="card checkout-card p-4">
+                    <h2 class="mb-4">Особиста інформація</h2>
+                    <div class="mb-3">
+                        <label for="id_customer_name" class="form-label">Ім'я та Прізвище</label>
+                        <input type="text" name="customer_name" class="form-control" id="id_customer_name"
+                               placeholder="Ваше ім'я" value="{{ form.customer_name.value }}">
+                        {% if form.customer_name.errors %}
+                        <div class="text-danger">
+                            {{ form.customer_name.errors|join:" " }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_customer_email" class="form-label">Email</label>
+                        <input type="email" name="customer_email" class="form-control" id="id_customer_email"
+                               placeholder="example@mail.com" value="{{ form.customer_email.value }}">
+                        {% if form.customer_email.errors %}
+                        <div class="text-danger">
+                            {{ form.customer_email.errors|join:" " }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_customer_phone" class="form-label">Телефон</label>
+                        <input type="text" name="customer_phone" class="form-control" id="id_customer_phone"
+                               placeholder="+380 ХХХ ХХХ ХХХХ" value="{{ form.customer_phone.value }}">
+                        {% if form.customer_phone.errors %}
+                        <div class="text-danger">
+                            {{ form.customer_phone.errors|join:" " }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Місто -->
+                <div class="card checkout-card p-4 mt-4">
+                    <h2 class="mb-4">Населений пункт</h2>
+                    <div class="mb-3 position-relative">
+                        <label for="city-input" class="form-label">Введіть населений пункт</label>
+                        <input type="text" id="city-input" class="form-control" name="city" placeholder="Почніть вводити місто...">
+                        <ul id="city-list" class="list-group position-absolute w-100"
+                            style="z-index: 100; display: none;">
+                            <!-- Результати будуть динамічно додаватися сюди -->
+                        </ul>
+                        {% if form.city.errors %}
+                        <div class="text-danger mt-2">{{ form.city.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Спосіб доставки -->
+                <div class="card checkout-card p-4 mt-4">
+                    <h2 class="mb-4">Спосіб доставки</h2>
+                    <div class="form-check">
+                        <input class="form-check-input delivery-method" type="radio" name="delivery_method"
+                               id="branch"
+                               value="branch">
+                        <label class="form-check-label" for="branch">Відділення</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input delivery-method" type="radio" name="delivery_method"
+                               id="parcel_locker"
+                               value="parcel_locker">
+                        <label class="form-check-label" for="parcel_locker">Поштомат</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input delivery-method" type="radio" name="delivery_method" id="courier"
+                               value="courier">
+                        <label class="form-check-label" for="courier">Кур'єром</label>
+                    </div>
+                    {% if form.delivery_method.errors %}
+                    <div class="text-danger">
+                        {{ form.delivery_method.errors|join:" " }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Доставка в відділення -->
+                <div class="card checkout-card p-4 mt-4 delivery-block" id="branch-delivery" style="display: none;">
+                    <h2 class="mb-4">Виберіть відділення</h2>
+                    <div class="mb-3 position-relative">
+                        <label for="branch-input" class="form-label">Пошук відділення</label>
+                        <input type="text" id="branch-input" name="branch" class="form-control"
+                               placeholder="Введіть номер або назву відділення...">
+                        <ul id="branch-list" class="list-group mt-2"
+                            style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; padding: 0;">
+                            <!-- Відділення будуть динамічно додаватися сюди -->
+                        </ul>
+                        {% if form.branch.errors %}
+                        <div class="text-danger mt-2">{{ form.branch.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Доставка в поштомат -->
+                <div class="card checkout-card p-4 mt-4 delivery-block" id="parcel-locker-delivery"
+                     style="display: none;">
+                    <h2 class="mb-4">Виберіть поштомат</h2>
+                    <div class="mb-3 position-relative">
+                        <label for="parcel-locker-input" class="form-label">Пошук поштомату</label>
+                        <input type="text" id="parcel-locker-input" name="parcel_locker" class="form-control"
+                               placeholder="Введіть адресу або номер поштомату...">
+                        <ul id="parcel-locker-list" class="list-group mt-2"
+                            style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; padding: 0;">
+                            <!-- Поштомати будуть динамічно додаватися сюди -->
+                        </ul>
+                        {% if form.parcel_locker.errors %}
+                        <div class="text-danger mt-2">{{ form.parcel_locker.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+
+                <!-- Адресна доставка -->
+                <div class="card checkout-card p-4 mt-4 delivery-block" id="courier-delivery" style="display: none;">
+                    <h2 class="mb-4">Виберіть адресу доставки</h2>
+                    <div class="mb-3 position-relative">
+                        <label for="street-input" class="form-label">Пошук вулиці</label>
+                        <input type="text" id="street-input" name="street" class="form-control"
+                               placeholder="Введіть назву вулиці...">
+                        <ul id="street-list" class="list-group mt-2"
+                            style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; padding: 0;">
+                            <!-- Вулиці будуть динамічно додаватися сюди -->
+                        </ul>
+                        {% if form.street.errors %}
+                        <div class="text-danger mt-2">{{ form.street.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <div class="mb-3">
+                                <label for="house-number-input" class="form-label">Номер будинку</label>
+                                <input type="text" id="house-number-input" name="house_number" class="form-control"
+                                       placeholder="Введіть номер будинку...">
+                                {% if form.house_number.errors %}
+                                <div class="text-danger mt-2">{{ form.house_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="mb-3">
+                                <label for="apartment-number-input" class="form-label">Номер квартири</label>
+                                <input type="text" id="apartment-number-input" name="apartment_number"
+                                       class="form-control"
+                                       placeholder="Введіть номер квартири...">
+                                {% if form.apartment_number.errors %}
+                                <div class="text-danger mt-2">{{ form.apartment_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Оплата -->
+                <div class="card checkout-card p-4 mt-4">
+                    <h2 class="mb-4">Оплата</h2>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment_method" id="cash"
+                               value="cash_on_delivery"
+                               checked>
+                        <label class="form-check-label" for="cash">Готівкою при отриманні</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment_method" id="card" value="card">
+                        <label class="form-check-label" for="card">Кредитна картка</label>
+                    </div>
+                    {% if form.payment_method.errors %}
+                    <div class="text-danger">
+                        {{ form.payment_method.errors|join:" " }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="card checkout-card p-4">
+                    <h2 class="mb-4">Ваше замовлення</h2>
+                    <ul class="list-group">
+                        {% for item in cart_items %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center flex-wrap">
+                                <!-- Зображення товару -->
+                                <img src="{{ item.product.images.all.0.image.url }}"
+                                     alt="{{ item.product.name }}"
+                                     class="img-fluid img-thumbnail me-3"
+                                     style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px;">
+                                <!-- Опис товару -->
+                                <div>
+                                    <h6 class="mb-1">{{ item.product.name }}</h6>
+                                    <small class="text-muted">Ціна: {{ item.product.price|floatformat:2 }} грн</small>
+                                </div>
+                            </div>
+                            <!-- Кількість і сума -->
+                            <div class="text-end">
+                                <span class="badge bg-primary rounded-pill">x{{ item.quantity }}</span>
+                                <div class="fw-bold">{{ item.product.price|mul:item.quantity|floatformat:2 }} грн</div>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-muted text-center py-4">
+                            <h5>Ваш кошик порожній</h5>
+                        </li>
+                        {% endfor %}
+                        <li class="list-group-item d-flex justify-content-between font-weight-bold bg-light">
+                            <span>Загальна сума:</span>
+                            <span>{{ total_price|floatformat:2 }} грн</span>
+                        </li>
+                    </ul>
+                    <button type="submit" class="btn btn-success mt-3">Підтвердити замовлення</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const deliveryMethods = document.querySelectorAll(".delivery-method");
+        const parcelLockerDelivery = document.getElementById("parcel-locker-delivery");
+        const branchDelivery = document.getElementById("branch-delivery");
+        const courierDelivery = document.getElementById("courier-delivery");
+
+        deliveryMethods.forEach(method => {
+            method.addEventListener("change", function () {
+                parcelLockerDelivery.style.display = "none";
+                branchDelivery.style.display = "none";
+                courierDelivery.style.display = "none";
+
+                if (this.value === "parcel_locker") {
+                    parcelLockerDelivery.style.display = "block";
+                } else if (this.value === "branch") {
+                    branchDelivery.style.display = "block";
+                } else if (this.value === "courier") {
+                    courierDelivery.style.display = "block";
+                }
+            });
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const cityInput = document.getElementById("city-input");
+    const cityList = document.getElementById("city-list");
+
+    const branchList = document.getElementById("branch-list");
+    const parcelLockerList = document.getElementById("parcel-locker-list");
+
+    const branchInput = document.getElementById("branch-input");
+    const parcelLockerInput = document.getElementById("parcel-locker-input");
+
+    const deliveryMethods = document.querySelectorAll(".delivery-method");
+
+    let currentCityRef = null; // Зберігаємо поточний CityRef
+
+    // Завантаження міст
+    cityInput.addEventListener("input", function () {
+        const query = this.value.trim();
+
+        if (query.length < 3) return;
+
+        cityList.innerHTML = "";
+        cityList.style.display = "none";
+
+        fetch(`/orders/api/cities/?q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.results || data.results.length === 0) return;
+
+                data.results.forEach(city => {
+                    const li = document.createElement("li");
+                    li.textContent = city.text;
+                    li.classList.add("list-group-item");
+                    li.dataset.ref = city.id;
+
+                    li.addEventListener("click", function () {
+                        cityInput.value = this.textContent;
+                        cityList.style.display = "none";
+
+                        currentCityRef = this.dataset.ref; // Зберігаємо вибране місто
+
+                        // Очищуємо списки при зміні міста
+                        branchList.innerHTML = "";
+                        parcelLockerList.innerHTML = "";
+
+                        loadWarehouses(currentCityRef, getSelectedDeliveryMethod(), branchList, parcelLockerList);
+                    });
+
+                    cityList.appendChild(li);
+                });
+
+                cityList.style.display = "block";
+            })
+            .catch(error => console.error("Помилка завантаження міст:", error));
+    });
+
+    // Отримати вибраний спосіб доставки
+    function getSelectedDeliveryMethod() {
+        const selectedMethod = document.querySelector(".delivery-method:checked");
+        return selectedMethod ? selectedMethod.value : null;
+    }
+
+    // Завантаження складів залежно від вибору способу доставки
+    function loadWarehouses(cityRef, deliveryMethod, branchList, parcelLockerList) {
+        if (!cityRef || !deliveryMethod) return;
+
+        if (deliveryMethod === "branch") {
+            loadSpecificWarehouses(cityRef, "branch", branchList);
+        } else if (deliveryMethod === "parcel_locker") {
+            loadSpecificWarehouses(cityRef, "parcel_locker", parcelLockerList);
+        }
+    }
+
+    // Завантаження конкретних складів
+    function loadSpecificWarehouses(cityRef, deliveryMethod, listElement) {
+        listElement.innerHTML = "";
+        listElement.style.display = "none";
+
+        fetch(`/orders/api/warehouses/?city_ref=${cityRef}&delivery_method=${deliveryMethod}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data || data.length === 0) {
+                    console.warn(`Немає даних для ${deliveryMethod}`);
+                    return;
+                }
+
+                data.forEach(item => addWarehouseToList(item, listElement));
+
+                if (data.length > 0) {
+                    listElement.style.display = "block";
+                }
+            })
+            .catch(error => console.error(`Помилка завантаження ${deliveryMethod}:`, error));
+    }
+
+    // Додавання складу до списку
+    function addWarehouseToList(item, listElement) {
+        const li = document.createElement("li");
+        li.textContent = `${item.number}: ${item.name}`;
+        li.classList.add("list-group-item");
+
+        li.addEventListener("click", function () {
+            const inputElement = listElement.previousElementSibling;
+            if (inputElement && inputElement.tagName === "INPUT") {
+                inputElement.value = this.textContent;
+                listElement.style.display = "none";
+            }
+        });
+
+        listElement.appendChild(li);
+    }
+
+    // Фільтрування списків складів
+    function filterWarehouses(inputElement, listElement) {
+        inputElement.addEventListener("input", function () {
+            const query = this.value.trim().toLowerCase();
+            const items = Array.from(listElement.children);
+
+            items.forEach(item => {
+                if (item.textContent.toLowerCase().includes(query)) {
+                    item.style.display = "block";
+                } else {
+                    item.style.display = "none";
+                }
+            });
+
+            const visibleItems = items.filter(item => item.style.display !== "none");
+            listElement.style.display = visibleItems.length > 0 ? "block" : "none";
+        });
+    }
+
+    // Слідкуємо за зміною способу доставки
+    deliveryMethods.forEach(method => {
+        method.addEventListener("change", function () {
+            if (!currentCityRef) return;
+
+            branchList.innerHTML = "";
+            parcelLockerList.innerHTML = "";
+
+            loadWarehouses(currentCityRef, this.value, branchList, parcelLockerList);
+        });
+    });
+
+    // Додаємо фільтрацію для списків складів
+    filterWarehouses(branchInput, branchList);
+    filterWarehouses(parcelLockerInput, parcelLockerList);
+});
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const cityInput = document.getElementById("city-input");
+    const streetInput = document.getElementById("street-input");
+    const streetList = document.getElementById("street-list");
+    let currentCityRef = null;
+
+    // Завантаження вулиць
+    streetInput.addEventListener("input", function () {
+        const query = this.value.trim();
+
+        if (!currentCityRef || query.length < 3) return;
+
+        streetList.innerHTML = "";
+        streetList.style.display = "none";
+
+        fetch(`/orders/api/streets/?city_ref=${currentCityRef}&q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.results || data.results.length === 0) return;
+
+                data.results.forEach(street => {
+                    const li = document.createElement("li");
+                    li.textContent = street.text;
+                    li.classList.add("list-group-item");
+                    li.dataset.ref = street.id;
+
+                    li.addEventListener("click", function () {
+                        streetInput.value = this.textContent;
+                        streetList.style.display = "none";
+                    });
+
+                    streetList.appendChild(li);
+                });
+
+                streetList.style.display = "block";
+            })
+            .catch(error => console.error("Помилка завантаження вулиць:", error));
+    });
+
+    // Логіка вибору міста (приклад із попереднього коду)
+    cityInput.addEventListener("input", function () {
+        const query = this.value.trim();
+
+        if (query.length < 3) return;
+
+        fetch(`/orders/api/cities/?q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                // Логіка для обробки списку міст...
+                if (data.results && data.results.length > 0) {
+                    const selectedCity = data.results[0];
+                    currentCityRef = selectedCity.id;
+                }
+            })
+            .catch(error => console.error("Помилка завантаження міст:", error));
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row g-5 justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <h4 class="mb-3 text-center">Редагування профілю</h4>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="row g-3">
+
+                    <!-- Ім'я -->
+                    <div class="col-6">
+                        <label for="id_first_name" class="form-label">{{ form.first_name.label }}</label>
+                        <input type="text" name="first_name" value="{{ form.first_name.value }}" id="id_first_name"
+                               class="form-control {% if form.first_name.errors %}is-invalid{% endif %}">
+                        {% if form.first_name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.first_name.errors|striptags }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Прізвище -->
+                    <div class="col-6">
+                        <label for="id_last_name" class="form-label">{{ form.last_name.label }}</label>
+                        <input type="text" name="last_name" value="{{ form.last_name.value }}" id="id_last_name"
+                               class="form-control {% if form.last_name.errors %}is-invalid{% endif %}">
+                        {% if form.last_name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.last_name.errors|striptags }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Дата народження -->
+                    <div class="col-6">
+                        <label for="id_date_birthday" class="form-label">{{ form.date_birthday.label }}</label>
+                        <input type="date" name="date_birthday" value="{{ form.date_birthday.value|date:'Y-m-d' }}"
+                               id="id_date_birthday"
+                               class="form-control {% if form.date_birthday.errors %}is-invalid{% endif %}">
+                        {% if form.date_birthday.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.date_birthday.errors|striptags }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Електронна пошта -->
+                    <div class="col-12">
+                        <label for="id_email" class="form-label">{{ form.email.label }}</label>
+                        <input type="email" name="email" value="{{ form.email.value }}" id="id_email"
+                               class="form-control {% if form.email.errors %}is-invalid{% endif %}">
+                        {% if form.email.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.email.errors|striptags }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Номер телефону -->
+                    <div class="col-6">
+                        <label for="id_phone_number" class="form-label">{{ form.phone_number.label }}</label>
+                        <input type="text" name="phone_number" value="{{ form.phone_number.value }}"
+                               id="id_phone_number"
+                               class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}">
+                        {% if form.phone_number.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.phone_number.errors|striptags }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <hr class="my-4">
+
+                    <button class="w-100 btn btn-secondary btn-lg" type="submit">Змінити</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
